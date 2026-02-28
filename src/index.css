@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+@theme {
+  --color-zalo-primary: #006AF5;
+  --color-zalo-secondary: #0068FF;
+  --color-zalo-dark: #0354D9;
+  --color-zalo-light: #37DEE7;
+  --color-zalopay-green: #33d387;
+}
