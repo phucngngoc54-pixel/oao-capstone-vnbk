@@ -204,8 +204,8 @@ export default function App() {
 
     rows.sort((a, b) => {
       if (sortField === 'Priority') {
-        const diff = parseInt(b.Priority, 10) - parseInt(a.Priority, 10);
-        return sortOrder === 'desc' ? diff : -diff;
+        const diff = parseInt(a.Priority, 10) - parseInt(b.Priority, 10); // Priority 1 is highest
+        return sortOrder === 'desc' ? -diff : diff;
       }
       const diff = a.Config_ID.localeCompare(b.Config_ID);
       return sortOrder === 'asc' ? diff : -diff;
@@ -237,13 +237,13 @@ export default function App() {
       return rules.some(r => r.User_Segment === 'All' || r.User_Segment === userSegment);
     });
 
-    // 3. Sort by Priority (High to Low)
+    // 3. Sort by Priority (Low number = High priority, e.g., 1 is top)
     cards.sort((a, b) => {
       const ruleA = data.displayRules.find(r => r.Config_ID === a.Config_ID);
       const ruleB = data.displayRules.find(r => r.Config_ID === b.Config_ID);
-      const prioA = parseInt(ruleA?.Priority || '0', 10);
-      const prioB = parseInt(ruleB?.Priority || '0', 10);
-      return prioB - prioA;
+      const prioA = parseInt(ruleA?.Priority || '999', 10);
+      const prioB = parseInt(ruleB?.Priority || '999', 10);
+      return prioA - prioB;
     });
 
     return cards;
@@ -317,8 +317,8 @@ export default function App() {
       {/* --- Left Sidebar --- */}
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col">
         <div className="p-6 border-b border-slate-200 flex items-center gap-3">
-          <img src="/logos/zalo_logo.svg" alt="Zalo Logo" className="w-8 h-8 object-contain" />
-          <span className="text-xl font-bold text-slate-800">CSTool</span>
+          <img src="/logos/zalo_logo.svg" alt="ZaloPay Logo" className="w-8 h-8 object-contain" />
+          <span className="text-xl font-bold text-slate-800">ZaloPay CSTool</span>
         </div>
         <nav className="flex-1 p-4 space-y-1">
           <a
@@ -361,7 +361,7 @@ export default function App() {
           <>
             <header className="bg-white border-b border-slate-200 px-8 py-5 flex justify-between items-center">
               <div>
-                <h1 className="text-2xl font-bold text-slate-800">Affiliate Finance Cards</h1>
+                <h1 className="text-2xl font-bold text-slate-800">ZaloPay Affiliate Finance Cards</h1>
                 <p className="text-slate-500 text-sm mt-1">Manage OAO Hub configurations and display rules.</p>
               </div>
               <div className="flex items-center gap-4">
@@ -532,13 +532,34 @@ export default function App() {
 
             {/* SCREEN 1: LISTING PAGE */}
             {mobileScreen === 'listing' && (
-              <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-                <div className="px-5 py-4 bg-white sticky top-0 z-30 shadow-sm">
-                  <h2 className="text-lg font-bold text-slate-900">Mở thẻ & Vay</h2>
-                  <p className="text-xs text-slate-500">Ưu đãi dành riêng cho bạn</p>
+              <div className="flex flex-col h-full bg-slate-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                {/* Top Banner Box */}
+                <div className="px-4 pt-4 pb-2">
+                  <div className="w-full h-24 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-sm overflow-hidden relative">
+                    <div className="font-bold">Mở tài khoản trong 5 phút</div>
+                    <img src="/logos/zalo_logo.svg" className="absolute -right-4 -bottom-4 w-20 h-20 opacity-20" alt="bg" />
+                  </div>
                 </div>
 
-                <div className="p-4 space-y-4">
+                {/* Horizontal Navigator */}
+                <div className="px-2 pb-2">
+                  <div className="flex overflow-x-auto gap-2 px-2 pb-2 scrollbar-hide">
+                    {['Tất cả', 'Tài khoản', 'Thẻ tín dụng', 'Vay tiêu dùng', 'Bảo hiểm'].map(tab => (
+                      <div key={tab} className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-medium border bg-white text-slate-600 border-slate-200`}>
+                        {tab}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="p-4 flex-1 overflow-y-auto space-y-4">
+                  <div className="flex justify-between items-end mb-2 px-1">
+                    <div>
+                      <h2 className="text-lg font-bold text-slate-900 leading-tight">Mở thẻ & Vay</h2>
+                      <p className="text-[10px] text-slate-500">Ưu đãi dành riêng cho bạn</p>
+                    </div>
+                  </div>
+
                   {mobileCards.length === 0 ? (
                     <div className="text-center py-10 text-slate-400 text-sm">
                       Không có thẻ nào phù hợp với phân khúc này.
@@ -551,7 +572,7 @@ export default function App() {
                         className={`relative rounded-2xl p-5 cursor-pointer transition-transform active:scale-95 shadow-sm border border-black/5 ${selectedConfigId === card.Config_ID ? 'ring-2 ring-zalo-primary ring-offset-2' : ''}`}
                         style={{ backgroundColor: card.Bg_Color || '#ffffff', color: card.Text_Color || '#1e293b' }}
                       >
-                        {/* Badge */}
+                        {/* ... existing card loop content ... */}
                         {card.Badge_Text && (
                           <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-bl-lg rounded-tr-xl shadow-sm">
                             {card.Badge_Text}
@@ -592,6 +613,36 @@ export default function App() {
                       </div>
                     ))
                   )}
+
+                  <div className="flex justify-center mt-6 pb-4">
+                    <button className="text-blue-600 text-xs font-medium flex items-center gap-1 bg-blue-50 px-4 py-2 rounded-full">
+                      Xem thêm
+                      <ChevronRight size={14} className="rotate-90" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Bottom Navigator */}
+                <div className="h-14 bg-white border-t border-slate-100 flex items-center justify-around px-2 pb-1 shrink-0">
+                  <div className="flex flex-col items-center gap-1 text-slate-400">
+                    <Activity size={20} />
+                    <span className="text-[9px] font-medium">Khám phá</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1 text-blue-600">
+                    <div className="relative">
+                      <Activity size={20} />
+                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></div>
+                    </div>
+                    <span className="text-[9px] font-bold">Mở thẻ & Vay</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1 text-slate-400">
+                    <Activity size={20} />
+                    <span className="text-[9px] font-medium">Ưu đãi</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1 text-slate-400">
+                    <Activity size={20} />
+                    <span className="text-[9px] font-medium">Quản lý</span>
+                  </div>
                 </div>
               </div>
             )}
@@ -657,6 +708,41 @@ export default function App() {
                           <h3 className="text-sm font-bold text-slate-900 mb-2">Điều khoản & Điều kiện</h3>
                           <div className="text-xs text-slate-600 leading-relaxed whitespace-pre-line bg-slate-50 p-3 rounded-lg border border-slate-100">
                             {detail.TnC_Content || 'Chưa có thông tin điều khoản.'}
+                          </div>
+                        </div>
+
+                        {/* FAQs */}
+                        {(detail.FAQ_1_Q || detail.FAQ_2_Q || detail.FAQ_3_Q) && (
+                          <div className="mt-6">
+                            <h3 className="text-sm font-bold text-slate-900 mb-2">Giải đáp thắc mắc</h3>
+                            <div className="space-y-2">
+                              {[1, 2, 3].map(num => {
+                                const q = detail[`FAQ_${num}_Q` as keyof ProductDetailConfig];
+                                const a = detail[`FAQ_${num}_A` as keyof ProductDetailConfig];
+                                if (!q) return null;
+                                return (
+                                  <div key={num} className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                    <div className="font-bold text-xs text-slate-800 mb-1">{q}</div>
+                                    <div className="text-xs text-slate-600">{a}</div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Có thể bạn quan tâm */}
+                        <div className="mt-8 border-t border-slate-100 pt-6 px-1">
+                          <h3 className="text-sm font-bold text-slate-900 mb-3">Có thể bạn quan tâm</h3>
+                          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+                            {data?.cardUIConfig.slice(0, 3).map((item, idx) => (
+                              <div key={idx} className="shrink-0 w-36 border border-slate-200 rounded-xl p-3 flex flex-col items-center bg-white shadow-sm">
+                                <div className="w-10 h-10 rounded-full shadow-sm mb-2 overflow-hidden border border-slate-100">
+                                  {item.Logo_URL ? <img src={item.Logo_URL} className="w-full h-full object-cover" /> : <Building2 size={24} className="text-slate-300 m-auto mt-2" />}
+                                </div>
+                                <div className="text-xs font-bold text-center line-clamp-2 leading-tight">{item.Card_Title}</div>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       </div>

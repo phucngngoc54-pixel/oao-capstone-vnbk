@@ -28,6 +28,7 @@ export type CardUIConfig = {
     Benefit_2: string;
     Benefit_3: string;
     CTA_Label_Card: string;
+    Service_Group?: string;
 };
 
 export type ProductDetailConfig = {
@@ -38,6 +39,12 @@ export type ProductDetailConfig = {
     Step_2_Desc: string;
     CTA_Action_Type: string;
     Final_Target_URL: string;
+    FAQ_1_Q?: string;
+    FAQ_1_A?: string;
+    FAQ_2_Q?: string;
+    FAQ_2_A?: string;
+    FAQ_3_Q?: string;
+    FAQ_3_A?: string;
 };
 
 export type DisplayRules = {

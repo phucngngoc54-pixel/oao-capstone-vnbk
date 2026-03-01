@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Smartphone, CheckCircle2, ChevronRight, Building2, ArrowLeft } from 'lucide-react';
+import { X, Save, Smartphone, CheckCircle2, ChevronRight, Building2, ArrowLeft, Activity } from 'lucide-react';
 import { ParsedData, CardUIConfig, ProductDetailConfig, DisplayRules } from '../types';
 
 interface CardConfigModalProps {
@@ -160,6 +160,22 @@ export default function CardConfigModal({ isOpen, onClose, configId, data, onSav
                                                 <option value="ADD_NEW_PARTNER" className="text-blue-600 font-bold">--- + Add New Partner ---</option>
                                             </select>
                                         </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1">Service Group (Phân loại dịch vụ)</label>
+                                        <select
+                                            value={cardUI.Service_Group || 'Tất cả'}
+                                            onChange={e => setCardUI({ ...cardUI, Service_Group: e.target.value })}
+                                            className="w-full p-2.5 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                        >
+                                            <option value="Tất cả">Tất cả</option>
+                                            <option value="Tài khoản">Tài khoản</option>
+                                            <option value="Thẻ tín dụng">Thẻ tín dụng</option>
+                                            <option value="Vay tiêu dùng">Vay tiêu dùng</option>
+                                            <option value="Bảo hiểm">Bảo hiểm</option>
+                                            <option value="Tiện ích mở rộng">Tiện ích mở rộng</option>
+                                        </select>
                                     </div>
 
                                     <div>
@@ -351,7 +367,30 @@ export default function CardConfigModal({ isOpen, onClose, configId, data, onSav
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-6">
+                                    {/* FAQs Section */}
+                                    <div className="bg-slate-100 p-4 rounded-xl border border-slate-200 mt-6 space-y-4">
+                                        <h3 className="font-bold text-slate-800 text-sm">FAQs (Giải đáp thắc mắc - Tùy chọn)</h3>
+
+                                        <div className="space-y-2">
+                                            <label className="block text-xs font-bold text-slate-700">FAQ 1</label>
+                                            <input type="text" value={productDetail.FAQ_1_Q || ''} onChange={e => setProductDetail({ ...productDetail, FAQ_1_Q: e.target.value })} placeholder="Câu hỏi 1..." className="w-full p-2 bg-white border border-slate-300 rounded text-sm outline-none" />
+                                            <textarea value={productDetail.FAQ_1_A || ''} onChange={e => setProductDetail({ ...productDetail, FAQ_1_A: e.target.value })} placeholder="Trả lời 1..." rows={2} className="w-full p-2 bg-white border border-slate-300 rounded text-sm outline-none resize-none" />
+                                        </div>
+
+                                        <div className="space-y-2 border-t border-slate-200 pt-4">
+                                            <label className="block text-xs font-bold text-slate-700">FAQ 2</label>
+                                            <input type="text" value={productDetail.FAQ_2_Q || ''} onChange={e => setProductDetail({ ...productDetail, FAQ_2_Q: e.target.value })} placeholder="Câu hỏi 2..." className="w-full p-2 bg-white border border-slate-300 rounded text-sm outline-none" />
+                                            <textarea value={productDetail.FAQ_2_A || ''} onChange={e => setProductDetail({ ...productDetail, FAQ_2_A: e.target.value })} placeholder="Trả lời 2..." rows={2} className="w-full p-2 bg-white border border-slate-300 rounded text-sm outline-none resize-none" />
+                                        </div>
+
+                                        <div className="space-y-2 border-t border-slate-200 pt-4">
+                                            <label className="block text-xs font-bold text-slate-700">FAQ 3</label>
+                                            <input type="text" value={productDetail.FAQ_3_Q || ''} onChange={e => setProductDetail({ ...productDetail, FAQ_3_Q: e.target.value })} placeholder="Câu hỏi 3..." className="w-full p-2 bg-white border border-slate-300 rounded text-sm outline-none" />
+                                            <textarea value={productDetail.FAQ_3_A || ''} onChange={e => setProductDetail({ ...productDetail, FAQ_3_A: e.target.value })} placeholder="Trả lời 3..." rows={2} className="w-full p-2 bg-white border border-slate-300 rounded text-sm outline-none resize-none" />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-6 mt-6">
                                         <div>
                                             <label className="block text-sm font-bold text-slate-700 mb-1">Action Type</label>
                                             <select
@@ -470,47 +509,99 @@ export default function CardConfigModal({ isOpen, onClose, configId, data, onSav
 
                                 {/* PREVIEW: LISTING */}
                                 {previewScreen === 'listing' && (
-                                    <div className="p-4">
-                                        <div
-                                            className="relative rounded-2xl p-5 shadow-sm border border-black/5"
-                                            style={{ backgroundColor: cardUI.Bg_Color || '#ffffff', color: cardUI.Text_Color || '#1e293b' }}
-                                        >
-                                            {cardUI.Badge_Text && (
-                                                <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-bl-lg rounded-tr-xl">
-                                                    {cardUI.Badge_Text}
-                                                </div>
-                                            )}
+                                    <div className="flex flex-col h-full bg-slate-50">
 
-                                            <div className="flex items-start gap-3 mb-4">
-                                                <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center overflow-hidden shrink-0">
-                                                    {cardUI.Logo_URL ? (
-                                                        <img src={cardUI.Logo_URL} alt="logo" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                                                    ) : (
-                                                        <Building2 size={20} className="text-slate-400" />
-                                                    )}
+                                        {/* Top Banner Box */}
+                                        <div className="px-4 py-2">
+                                            <div className="w-full h-24 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-sm overflow-hidden relative">
+                                                <div className="font-bold">Mở tài khoản trong 5 phút</div>
+                                                <img src="/logos/zalo_logo.svg" className="absolute -right-4 -bottom-4 w-20 h-20 opacity-20" alt="bg" />
+                                            </div>
+                                        </div>
+
+                                        {/* Horizontal Navigator */}
+                                        <div className="px-2 pb-2">
+                                            <div className="flex overflow-x-auto gap-2 px-2 pb-2 scrollbar-hide">
+                                                {['Tất cả', 'Tài khoản', 'Thẻ tín dụng', 'Vay tiêu dùng', 'Bảo hiểm'].map(tab => (
+                                                    <div key={tab} className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-medium border ${tab === (cardUI.Service_Group || 'Tất cả') ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-white text-slate-600 border-slate-200'}`}>
+                                                        {tab}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div className="p-4 flex-1 overflow-y-auto">
+                                            <div
+                                                className="relative rounded-2xl p-5 shadow-sm border border-black/5"
+                                                style={{ backgroundColor: cardUI.Bg_Color || '#ffffff', color: cardUI.Text_Color || '#1e293b' }}
+                                            >
+                                                {cardUI.Badge_Text && (
+                                                    <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-bl-lg rounded-tr-xl">
+                                                        {cardUI.Badge_Text}
+                                                    </div>
+                                                )}
+
+                                                <div className="flex items-start gap-3 mb-4">
+                                                    <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center overflow-hidden shrink-0">
+                                                        {cardUI.Logo_URL ? (
+                                                            <img src={cardUI.Logo_URL} alt="logo" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                                                        ) : (
+                                                            <Building2 size={20} className="text-slate-400" />
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="font-bold text-sm leading-tight">{cardUI.Card_Title || 'Card Title'}</h3>
+                                                        <p className="text-xs opacity-80 mt-0.5">{cardUI.Card_Subtitle || 'Subtitle'}</p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <h3 className="font-bold text-sm leading-tight">{cardUI.Card_Title || 'Card Title'}</h3>
-                                                    <p className="text-xs opacity-80 mt-0.5">{cardUI.Card_Subtitle || 'Subtitle'}</p>
+
+                                                <ul className="space-y-1.5 mb-4">
+                                                    {[cardUI.Benefit_1, cardUI.Benefit_2, cardUI.Benefit_3].filter(Boolean).map((benefit, i) => (
+                                                        <li key={i} className="text-xs flex items-start gap-1.5 opacity-90">
+                                                            <CheckCircle2 size={14} className="shrink-0 mt-0.5 opacity-70" />
+                                                            <span className="leading-tight">{benefit}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+
+                                                <div className="flex justify-end">
+                                                    <div
+                                                        className="bg-white/20 text-xs font-bold py-1.5 px-4 rounded-full backdrop-blur-sm"
+                                                        style={{ color: cardUI.Text_Color || 'inherit' }}
+                                                    >
+                                                        {cardUI.CTA_Label_Card || 'Xem chi tiết'}
+                                                    </div>
                                                 </div>
                                             </div>
 
-                                            <ul className="space-y-1.5 mb-4">
-                                                {[cardUI.Benefit_1, cardUI.Benefit_2, cardUI.Benefit_3].filter(Boolean).map((benefit, i) => (
-                                                    <li key={i} className="text-xs flex items-start gap-1.5 opacity-90">
-                                                        <CheckCircle2 size={14} className="shrink-0 mt-0.5 opacity-70" />
-                                                        <span className="leading-tight">{benefit}</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
+                                            <div className="flex justify-center mt-4">
+                                                <button className="text-blue-600 text-xs font-medium flex items-center gap-1">
+                                                    Xem thêm
+                                                    <ChevronRight size={14} className="rotate-90" />
+                                                </button>
+                                            </div>
+                                        </div>
 
-                                            <div className="flex justify-end">
-                                                <div
-                                                    className="bg-white/20 text-xs font-bold py-1.5 px-4 rounded-full backdrop-blur-sm"
-                                                    style={{ color: cardUI.Text_Color || 'inherit' }}
-                                                >
-                                                    {cardUI.CTA_Label_Card || 'Xem chi tiết'}
+                                        {/* Bottom Navigator */}
+                                        <div className="h-14 bg-white border-t border-slate-100 flex items-center justify-around px-2 pb-1 shrink-0">
+                                            <div className="flex flex-col items-center gap-1 text-slate-400">
+                                                <Activity size={20} />
+                                                <span className="text-[9px] font-medium">Khám phá</span>
+                                            </div>
+                                            <div className="flex flex-col items-center gap-1 text-blue-600">
+                                                <div className="relative">
+                                                    <Activity size={20} />
+                                                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></div>
                                                 </div>
+                                                <span className="text-[9px] font-bold">Mở thẻ & Vay</span>
+                                            </div>
+                                            <div className="flex flex-col items-center gap-1 text-slate-400">
+                                                <Activity size={20} />
+                                                <span className="text-[9px] font-medium">Ưu đãi</span>
+                                            </div>
+                                            <div className="flex flex-col items-center gap-1 text-slate-400">
+                                                <Activity size={20} />
+                                                <span className="text-[9px] font-medium">Quản lý</span>
                                             </div>
                                         </div>
                                     </div>
@@ -562,16 +653,52 @@ export default function CardConfigModal({ isOpen, onClose, configId, data, onSav
                                                     {productDetail.TnC_Content || 'Chưa có thông tin điều khoản.'}
                                                 </div>
                                             </div>
+
+                                            {/* FAQs */}
+                                            {(productDetail.FAQ_1_Q || productDetail.FAQ_2_Q || productDetail.FAQ_3_Q) && (
+                                                <div className="mt-6">
+                                                    <h3 className="text-sm font-bold text-slate-900 mb-2">Giải đáp thắc mắc</h3>
+                                                    <div className="space-y-2">
+                                                        {[1, 2, 3].map(num => {
+                                                            const q = productDetail[`FAQ_${num}_Q` as keyof ProductDetailConfig];
+                                                            const a = productDetail[`FAQ_${num}_A` as keyof ProductDetailConfig];
+                                                            if (!q) return null;
+                                                            return (
+                                                                <div key={num} className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                                                    <div className="font-bold text-xs text-slate-800 mb-1">{q}</div>
+                                                                    <div className="text-xs text-slate-600">{a}</div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Có thể bạn quan tâm */}
+                                            <div className="mt-8 border-t border-slate-100 pt-6 px-1">
+                                                <h3 className="text-sm font-bold text-slate-900 mb-3">Có thể bạn quan tâm</h3>
+                                                <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+                                                    {data?.cardUIConfig.slice(0, 3).map((item, idx) => (
+                                                        <div key={idx} className="shrink-0 w-36 border border-slate-200 rounded-xl p-3 flex flex-col items-center bg-white shadow-sm">
+                                                            <div className="w-10 h-10 rounded-full shadow-sm mb-2 overflow-hidden border border-slate-100">
+                                                                {item.Logo_URL ? <img src={item.Logo_URL} className="w-full h-full object-cover" /> : <Building2 size={24} className="text-slate-300 m-auto mt-2" />}
+                                                            </div>
+                                                            <div className="text-xs font-bold text-center line-clamp-2 leading-tight">{item.Card_Title}</div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
                                         </div>
 
-                                        <div className="sticky bottom-0 p-4 bg-white border-t border-slate-100">
-                                            <div
-                                                className="w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+                                        <div className="sticky bottom-0 p-4 bg-white border-t border-slate-100 z-10">
+                                            <button
+                                                onClick={() => setPreviewScreen('steps')}
+                                                className="w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-transform active:scale-95"
                                                 style={{ backgroundColor: cardUI.Bg_Color || '#2563eb', color: cardUI.Text_Color || 'white' }}
                                             >
                                                 {cardUI.CTA_Label_Card || 'Đăng ký ngay'}
                                                 <ChevronRight size={16} />
-                                            </div>
+                                            </button>
                                         </div>
                                     </div>
                                 )}
