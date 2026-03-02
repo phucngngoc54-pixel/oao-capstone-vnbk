@@ -118,6 +118,8 @@ export default function App() {
   // Mobile Preview State
   const [mobileScreen, setMobileScreen] = useState<'listing' | 'detail' | 'steps'>('listing');
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
+  const [mobileActiveCategory, setMobileActiveCategory] = useState('Tất cả');
+  const [mobileActiveNav, setMobileActiveNav] = useState('Mở thẻ & Vay');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -316,9 +318,8 @@ export default function App() {
     <div className="flex h-screen bg-slate-100 font-sans overflow-hidden">
       {/* --- Left Sidebar --- */}
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col">
-        <div className="p-6 border-b border-slate-200 flex items-center gap-3">
-          <img src="/logos/zalo_logo.svg" alt="ZaloPay Logo" className="w-8 h-8 object-contain" />
-          <span className="text-xl font-bold text-slate-800">ZaloPay CSTool</span>
+        <div className="p-6 border-b border-slate-200 flex items-center justify-center bg-white cursor-pointer hover:bg-slate-50 transition-colors">
+          <img src="/logos/zalopay_logo.png" alt="ZaloPay" className="h-8 object-contain" />
         </div>
         <nav className="flex-1 p-4 space-y-1">
           <a
@@ -533,21 +534,17 @@ export default function App() {
             {/* SCREEN 1: LISTING PAGE */}
             {mobileScreen === 'listing' && (
               <div className="flex flex-col h-full bg-slate-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                {/* Top Banner Box */}
-                <div className="px-4 pt-4 pb-2">
-                  <div className="w-full h-24 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-sm overflow-hidden relative">
-                    <div className="font-bold">Mở tài khoản trong 5 phút</div>
-                    <img src="/logos/zalo_logo.svg" className="absolute -right-4 -bottom-4 w-20 h-20 opacity-20" alt="bg" />
-                  </div>
-                </div>
-
                 {/* Horizontal Navigator */}
-                <div className="px-2 pb-2">
+                <div className="px-2 pb-2 mt-4">
                   <div className="flex overflow-x-auto gap-2 px-2 pb-2 scrollbar-hide">
                     {['Tất cả', 'Tài khoản', 'Thẻ tín dụng', 'Vay tiêu dùng', 'Bảo hiểm'].map(tab => (
-                      <div key={tab} className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-medium border bg-white text-slate-600 border-slate-200`}>
+                      <button
+                        key={tab}
+                        onClick={() => setMobileActiveCategory(tab)}
+                        className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-medium border transition-colors ${mobileActiveCategory === tab ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-white text-slate-600 border-slate-200'}`}
+                      >
                         {tab}
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -615,7 +612,10 @@ export default function App() {
                   )}
 
                   <div className="flex justify-center mt-6 pb-4">
-                    <button className="text-blue-600 text-xs font-medium flex items-center gap-1 bg-blue-50 px-4 py-2 rounded-full">
+                    <button
+                      onClick={() => alert("Chức năng 'Xem thêm' đang cập nhật")}
+                      className="text-blue-600 text-xs font-medium flex items-center gap-1 bg-blue-50 px-4 py-2 rounded-full hover:bg-blue-100 transition-colors"
+                    >
                       Xem thêm
                       <ChevronRight size={14} className="rotate-90" />
                     </button>
@@ -624,25 +624,24 @@ export default function App() {
 
                 {/* Bottom Navigator */}
                 <div className="h-14 bg-white border-t border-slate-100 flex items-center justify-around px-2 pb-1 shrink-0">
-                  <div className="flex flex-col items-center gap-1 text-slate-400">
-                    <Activity size={20} />
-                    <span className="text-[9px] font-medium">Khám phá</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-1 text-blue-600">
-                    <div className="relative">
-                      <Activity size={20} />
-                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></div>
-                    </div>
-                    <span className="text-[9px] font-bold">Mở thẻ & Vay</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-1 text-slate-400">
-                    <Activity size={20} />
-                    <span className="text-[9px] font-medium">Ưu đãi</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-1 text-slate-400">
-                    <Activity size={20} />
-                    <span className="text-[9px] font-medium">Quản lý</span>
-                  </div>
+                  {[
+                    { id: 'Khám phá', icon: Activity },
+                    { id: 'Mở thẻ & Vay', icon: Activity, badge: true },
+                    { id: 'Ưu đãi', icon: Activity },
+                    { id: 'Quản lý', icon: Activity }
+                  ].map(item => (
+                    <button
+                      key={item.id}
+                      onClick={() => setMobileActiveNav(item.id)}
+                      className={`flex flex-col items-center gap-1 transition-colors ${mobileActiveNav === item.id ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}
+                    >
+                      <div className="relative">
+                        <item.icon size={20} />
+                        {item.badge && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></div>}
+                      </div>
+                      <span className={`text-[9px] ${mobileActiveNav === item.id ? 'font-bold' : 'font-medium'}`}>{item.id}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
