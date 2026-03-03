@@ -24,7 +24,7 @@ import {
 } from './types';
 import CardConfigModal from './components/CardConfigModal';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
-
+import DecisionTool from './components/DecisionTool';
 const PARTNER_MASTER_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRu49yPLpD0mYpHNBG8LOG3q-HuHyqoBT4T8Xyy2kKpX48z58eS4ZMIwOFYZW8rgBjO5-8Xg4yjkyUb/pub?gid=0&single=true&output=csv';
 const CARD_UI_CONFIG_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRu49yPLpD0mYpHNBG8LOG3q-HuHyqoBT4T8Xyy2kKpX48z58eS4ZMIwOFYZW8rgBjO5-8Xg4yjkyUb/pub?gid=1227981483&single=true&output=csv';
 const PRODUCT_DETAIL_CONFIG_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRu49yPLpD0mYpHNBG8LOG3q-HuHyqoBT4T8Xyy2kKpX48z58eS4ZMIwOFYZW8rgBjO5-8Xg4yjkyUb/pub?gid=1182916111&single=true&output=csv';
@@ -107,7 +107,7 @@ export default function App() {
   // App State
   const [selectedConfigId, setSelectedConfigId] = useState<string | null>(null);
   // Navigation State
-  const [activeView, setActiveView] = useState<'configs' | 'analytics' | 'partners'>('configs');
+  const [activeView, setActiveView] = useState<'configs' | 'analytics' | 'partners' | 'decision'>('configs');
   // Dashboard Filters & Sort
   const [userSegment, setUserSegment] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState('');
@@ -355,7 +355,11 @@ export default function App() {
             <Building2 size={20} />
             Partner Configuration
           </a>
-          <a href="#" className="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-50 rounded-md font-medium">
+          <a
+            href="#"
+            onClick={(e) => { e.preventDefault(); setActiveView('decision'); }}
+            className={`flex items-center gap-3 px-3 py-2 rounded-md font-medium ${activeView === 'decision' ? 'bg-zalo-primary/10 text-zalo-primary' : 'text-slate-600 hover:bg-slate-50'}`}
+          >
             <Settings2 size={20} />
             OAO Decision
           </a>
@@ -509,7 +513,9 @@ export default function App() {
         ) : activeView === 'analytics' ? (
           <AnalyticsDashboard data={data} />
         ) : activeView === 'partners' ? (
-          <PartnerManager data={data} onUpdateData={(newData) => setData(newData)} />
+          <div className="p-8 text-slate-500">Partner Configuration module is under development.</div>
+        ) : activeView === 'decision' ? (
+          <DecisionTool data={data} onUpdateData={(newData) => setData(newData)} />
         ) : null}
       </main>
 
@@ -891,8 +897,8 @@ export default function App() {
                                 alert(`[CHUYỂN HƯỚNG ĐỐI TÁC]\n\nAction: ${cta.action_type}\nURL: ${cta.primary_url}\nCondition: ${cta.condition}`);
                               }}
                               className={`w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-md transition-opacity ${cta.action_type === 'DEEPLINK' || cta.condition === 'CONFIRM_CONDITION'
-                                  ? 'text-white'
-                                  : 'bg-white text-slate-700 border border-slate-200'
+                                ? 'text-white'
+                                : 'bg-white text-slate-700 border border-slate-200'
                                 }`}
                               style={
                                 (cta.action_type === 'DEEPLINK' || cta.condition === 'CONFIRM_CONDITION')
