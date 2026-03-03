@@ -74,10 +74,13 @@ const FALLBACK_DATA: ParsedData = {
       Badge_Text: 'HOT',
       Bg_Color: '#E8F5E9',
       Text_Color: '#1B5E20',
-      Benefit_1: 'Giải ngân nhanh',
-      Benefit_2: 'Không phí hồ sơ',
-      Benefit_3: 'Hạn mức cao',
-      CTA_Label_Card: 'Đăng ký'
+      Description: 'Giải ngân nhanh\nKhông phí hồ sơ\nHạn mức cao',
+      CTA_Label_Card: 'Đăng ký',
+      Has_Base_Card: true,
+      Has_Explored_Card: true,
+      Has_Freeze_Banner: false,
+      Has_Hero_Banner: false,
+      Has_Detail_Block: true
     }
   ],
   productDetailConfig: [
@@ -120,6 +123,7 @@ export default function App() {
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
   const [mobileActiveCategory, setMobileActiveCategory] = useState('Tất cả');
   const [mobileActiveNav, setMobileActiveNav] = useState('Mở thẻ & Vay');
+  const [visibleCount, setVisibleCount] = useState(2);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -239,6 +243,11 @@ export default function App() {
       return rules.some(r => r.User_Segment === 'All' || r.User_Segment === userSegment);
     });
 
+    // 2.5 Filter by Category (Mobile Preview Tabs)
+    if (mobileActiveCategory !== 'Tất cả') {
+      cards = cards.filter(c => c.Service_Group === mobileActiveCategory);
+    }
+
     // 3. Sort by Priority (Low number = High priority, e.g., 1 is top)
     cards.sort((a, b) => {
       const ruleA = data.displayRules.find(r => r.Config_ID === a.Config_ID);
@@ -249,7 +258,7 @@ export default function App() {
     });
 
     return cards;
-  }, [data, userSegment]);
+  }, [data, userSegment, mobileActiveCategory]);
 
   const handlePreviewClick = (configId: string) => {
     console.log('UI: Selecting config for preview:', configId);
@@ -540,7 +549,7 @@ export default function App() {
                     {['Tất cả', 'Tài khoản', 'Thẻ tín dụng', 'Vay tiêu dùng', 'Bảo hiểm'].map(tab => (
                       <button
                         key={tab}
-                        onClick={() => setMobileActiveCategory(tab)}
+                        onClick={() => { setMobileActiveCategory(tab); setVisibleCount(2); }}
                         className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-medium border transition-colors ${mobileActiveCategory === tab ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-white text-slate-600 border-slate-200'}`}
                       >
                         {tab}
@@ -549,8 +558,8 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="p-4 flex-1 overflow-y-auto space-y-4">
-                  <div className="flex justify-between items-end mb-2 px-1">
+                <div className="p-4 flex-1 overflow-y-auto space-y-4 pt-1">
+                  <div className="flex justify-between items-end mb-1 px-1">
                     <div>
                       <h2 className="text-lg font-bold text-slate-900 leading-tight">Mở thẻ & Vay</h2>
                       <p className="text-[10px] text-slate-500">Ưu đãi dành riêng cho bạn</p>
@@ -559,67 +568,112 @@ export default function App() {
 
                   {mobileCards.length === 0 ? (
                     <div className="text-center py-10 text-slate-400 text-sm">
-                      Không có thẻ nào phù hợp với phân khúc này.
+                      Không có thẻ nào phù hợp với danh mục này.
                     </div>
                   ) : (
-                    mobileCards.map((card) => (
-                      <div
-                        key={card.Config_ID}
-                        onClick={() => handleCardClick(card.Config_ID)}
-                        className={`relative rounded-2xl p-5 cursor-pointer transition-transform active:scale-95 shadow-sm border border-black/5 ${selectedConfigId === card.Config_ID ? 'ring-2 ring-zalo-primary ring-offset-2' : ''}`}
-                        style={{ backgroundColor: card.Bg_Color || '#ffffff', color: card.Text_Color || '#1e293b' }}
-                      >
-                        {/* ... existing card loop content ... */}
-                        {card.Badge_Text && (
-                          <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-bl-lg rounded-tr-xl shadow-sm">
-                            {card.Badge_Text}
-                          </div>
-                        )}
+                    mobileCards.slice(0, visibleCount).map((card) => {
+                      const detail = data.productDetailConfig.find(d => d.Config_ID === card.Config_ID);
+                      return (
+                        <div key={card.Config_ID} className="space-y-4">
+                          {/* PREVIEW: Freeze Banner (Listing) */}
+                          {card.Has_Freeze_Banner && (
+                            <div className="bg-blue-600 text-white p-3 rounded-xl flex items-center justify-between shadow-sm">
+                              <div>
+                                <h5 className="text-[10px] font-bold uppercase opacity-80">{detail?.Freeze_Title || 'Mở tài khoản nhanh'}</h5>
+                                <p className="text-xs font-medium">{detail?.Freeze_Subtitle || 'Chỉ 5 phút có ngay tài khoản'}</p>
+                              </div>
+                              <ChevronRight size={16} />
+                            </div>
+                          )}
 
-                        <div className="flex items-start gap-3 mb-4">
-                          <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center overflow-hidden shrink-0">
-                            {card.Logo_URL ? (
-                              <img src={card.Logo_URL} alt="logo" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                            ) : (
-                              <Building2 size={20} className="text-slate-400" />
-                            )}
-                          </div>
-                          <div>
-                            <h3 className="font-bold text-sm leading-tight">{card.Card_Title}</h3>
-                            <p className="text-xs opacity-80 mt-0.5">{card.Card_Subtitle}</p>
-                          </div>
+                          {/* PREVIEW: Hero Banner (Listing) */}
+                          {card.Has_Hero_Banner && (
+                            <div className="w-full aspect-[21/9] rounded-xl overflow-hidden bg-slate-200">
+                              {detail?.Hero_Banner_URL ? (
+                                <img src={detail.Hero_Banner_URL} className="w-full h-full object-cover" alt="Hero" />
+                              ) : (
+                                <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-100 p-4 text-center">
+                                  <span className="text-[10px] font-bold uppercase text-slate-500 mb-1">{detail?.Hero_Title || 'Chi tiêu trước, trả tiền sau'}</span>
+                                  <span className="text-[8px] text-slate-400">{detail?.Hero_Subtitle || 'Đăng ký thẻ tín dụng ngay để nhận ưu đãi'}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* PREVIEW: Card Block */}
+                          {card.Has_Base_Card && (
+                            <div
+                              onClick={() => handleCardClick(card.Config_ID)}
+                              className={`relative rounded-2xl p-5 cursor-pointer transition-transform active:scale-95 shadow-sm border border-black/5 overflow-hidden ${selectedConfigId === card.Config_ID ? 'ring-2 ring-zalo-primary ring-offset-2' : ''}`}
+                              style={{
+                                backgroundColor: card.Bg_Color || '#ffffff',
+                                backgroundImage: card.Background_Image_URL ? `url(${card.Background_Image_URL})` : 'none',
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'center',
+                                color: card.Text_Color || '#1e293b'
+                              }}
+                            >
+                              {card.Right_Faded_Logo_URL && (
+                                <img src={card.Right_Faded_Logo_URL} alt="" className="absolute -bottom-4 -right-4 w-32 h-32 object-contain opacity-10 pointer-events-none" />
+                              )}
+
+                              {card.Badge_Text && (
+                                <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-bl-lg rounded-tr-xl z-20">
+                                  {card.Badge_Text}
+                                </div>
+                              )}
+
+                              <div className="flex items-start gap-3 mb-4 relative z-10">
+                                <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center overflow-hidden shrink-0 border border-slate-50">
+                                  {card.Logo_URL ? (
+                                    <img src={card.Logo_URL} alt="logo" className="w-full h-full object-contain p-1" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                                  ) : (
+                                    <Building2 size={20} className="text-slate-400" />
+                                  )}
+                                </div>
+                                <div>
+                                  <h3 className="font-bold text-sm leading-tight" style={{ color: card.Title_Color || 'inherit' }}>{card.Card_Title}</h3>
+                                  <p className="text-xs mt-0.5" style={{ color: card.Subtitle_Color || card.Text_Color || 'inherit', opacity: card.Subtitle_Color ? 1 : 0.8 }}>{card.Card_Subtitle}</p>
+                                </div>
+                              </div>
+
+                              {card.Has_Explored_Card && (
+                                <ul className="space-y-1.5 mb-4 relative z-10">
+                                  {(card.Description || '').split('\n').filter(Boolean).map((benefit, i) => (
+                                    <li key={i} className="text-[11px] flex items-start gap-1.5" style={{ color: card.Content_Color || card.Text_Color || 'inherit', opacity: card.Content_Color ? 1 : 0.9 }}>
+                                      <div className="w-1 h-1 rounded-full bg-blue-500 shrink-0 mt-1.5 opacity-70" />
+                                      <span className="leading-tight">{benefit}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+
+                              <div className="flex justify-end relative z-10">
+                                <div
+                                  className="bg-white/30 text-[10px] font-bold py-1.5 px-4 rounded-full backdrop-blur-sm shadow-sm border border-white/20"
+                                  style={{ color: card.Text_Color || 'inherit' }}
+                                >
+                                  {card.CTA_Label_Card || 'Mở ngay'}
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
-
-                        <ul className="space-y-1.5 mb-4">
-                          {[card.Benefit_1, card.Benefit_2, card.Benefit_3].filter(Boolean).map((benefit, i) => (
-                            <li key={i} className="text-xs flex items-start gap-1.5 opacity-90">
-                              <CheckCircle2 size={14} className="shrink-0 mt-0.5 opacity-70" />
-                              <span className="leading-tight">{benefit}</span>
-                            </li>
-                          ))}
-                        </ul>
-
-                        <div className="flex justify-end">
-                          <button
-                            className="bg-white/20 hover:bg-white/30 text-xs font-bold py-1.5 px-4 rounded-full backdrop-blur-sm transition-colors"
-                            style={{ color: card.Text_Color || 'inherit' }}
-                          >
-                            {card.CTA_Label_Card || 'Xem chi tiết'}
-                          </button>
-                        </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
 
-                  <div className="flex justify-center mt-6 pb-4">
-                    <button
-                      onClick={() => alert("Chức năng 'Xem thêm' đang cập nhật")}
-                      className="text-blue-600 text-xs font-medium flex items-center gap-1 bg-blue-50 px-4 py-2 rounded-full hover:bg-blue-100 transition-colors"
-                    >
-                      Xem thêm
-                      <ChevronRight size={14} className="rotate-90" />
-                    </button>
-                  </div>
+                  {visibleCount < mobileCards.length && (
+                    <div className="flex justify-center mt-6 pb-4">
+                      <button
+                        onClick={() => setVisibleCount(mobileCards.length)}
+                        className="text-blue-600 text-xs font-medium flex items-center gap-1 bg-blue-50 px-4 py-2 rounded-full hover:bg-blue-100 transition-colors"
+                      >
+                        Xem thêm
+                        <ChevronRight size={14} className="rotate-90" />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Bottom Navigator */}
@@ -665,13 +719,13 @@ export default function App() {
                         <h2 className="font-bold text-slate-900 text-sm truncate">{card.Card_Title}</h2>
                       </div>
 
-                      {/* Hero Banner */}
+                      {/* Hero Banner / Header Image */}
                       <div className="w-full h-40 bg-slate-100 relative">
-                        {detail.Hero_Banner_URL ? (
-                          <img src={detail.Hero_Banner_URL} alt="Hero" className="w-full h-full object-cover" />
+                        {detail.Detail_Header_Image_URL || detail.Top_Image_URL ? (
+                          <img src={detail.Detail_Header_Image_URL || detail.Top_Image_URL} alt="Header" className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-slate-400 bg-slate-200" style={{ backgroundColor: card.Bg_Color }}>
-                            <span className="text-sm font-medium" style={{ color: card.Text_Color }}>Hero Banner Placeholder</span>
+                          <div className="w-full h-full flex items-center justify-center text-slate-400 bg-slate-200" style={{ backgroundColor: card.Bg_Color, backgroundImage: card.Background_Image_URL ? `url(${card.Background_Image_URL})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                            <span className="text-sm font-medium z-10 p-2 bg-white/50 rounded" style={{ color: card.Text_Color }}>Header Image Placeholder</span>
                           </div>
                         )}
                       </div>
@@ -680,28 +734,50 @@ export default function App() {
                         <div className="flex items-center gap-3 mb-6">
                           <div className="w-12 h-12 rounded-full bg-white shadow-sm border border-slate-100 flex items-center justify-center overflow-hidden shrink-0">
                             {card.Logo_URL ? (
-                              <img src={card.Logo_URL} alt="logo" className="w-full h-full object-cover" />
+                              <img src={card.Logo_URL} alt="logo" className="w-full h-full object-contain p-1" />
                             ) : (
                               <Building2 size={24} className="text-slate-400" />
                             )}
                           </div>
                           <div>
-                            <h1 className="font-bold text-lg text-slate-900 leading-tight">{card.Card_Title}</h1>
+                            <h1 className="font-bold text-lg text-slate-900 leading-tight">{detail.Detail_Header_Title || card.Card_Title}</h1>
                             <p className="text-sm text-slate-500">{card.Card_Subtitle}</p>
                           </div>
                         </div>
 
-                        <div className="bg-zalo-primary/10 rounded-xl p-4 mb-6 border border-zalo-primary/20">
-                          <h3 className="text-xs font-bold text-zalo-dark uppercase tracking-wider mb-3">Đặc quyền nổi bật</h3>
-                          <ul className="space-y-2">
-                            {[card.Benefit_1, card.Benefit_2, card.Benefit_3].filter(Boolean).map((benefit, i) => (
-                              <li key={i} className="text-sm flex items-start gap-2 text-zalo-primary">
-                                <CheckCircle2 size={16} className="shrink-0 mt-0.5 text-zalo-primary/80" />
-                                <span>{benefit}</span>
-                              </li>
+                        {detail.Sub_Contents && detail.Sub_Contents.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mb-6">
+                            {detail.Sub_Contents.map(sub => (
+                              <span key={sub.id} className="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-full text-[10px] font-bold border border-slate-200 flex items-center gap-1 cursor-pointer hover:bg-slate-200">
+                                {sub.label} <ExternalLink size={10} />
+                              </span>
                             ))}
-                          </ul>
-                        </div>
+                          </div>
+                        )}
+
+                        {card.Has_Detail_Block ? (
+                          <div className="bg-zalo-primary/10 rounded-xl p-4 mb-6 border border-zalo-primary/20">
+                            <h3 className="text-xs font-bold text-zalo-dark uppercase tracking-wider mb-3">Quyền lợi / Tiêu điểm</h3>
+                            <ul className="space-y-2">
+                              {(detail.Detail_Contents || '').split('\n').filter(Boolean).map((benefit, i) => (
+                                <li key={i} className="text-sm flex items-start gap-2 text-zalo-primary">
+                                  <CheckCircle2 size={16} className="shrink-0 mt-0.5 text-zalo-primary/80" />
+                                  <span>{benefit}</span>
+                                </li>
+                              ))}
+                              {!(detail.Detail_Contents) && [card.Benefit_1, card.Benefit_2, card.Benefit_3].filter(Boolean).map((benefit, i) => (
+                                <li key={i} className="text-sm flex items-start gap-2 text-zalo-primary">
+                                  <CheckCircle2 size={16} className="shrink-0 mt-0.5 text-zalo-primary/80" />
+                                  <span>{benefit}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : (
+                          <div className="p-4 bg-slate-50 rounded-xl mb-6 text-center border-2 border-dashed border-slate-200">
+                            <p className="text-xs text-slate-400">Detail Block is Disabled</p>
+                          </div>
+                        )}
 
                         <div>
                           <h3 className="text-sm font-bold text-slate-900 mb-2">Điều khoản & Điều kiện</h3>
@@ -791,31 +867,56 @@ export default function App() {
                         </div>
 
                         <div className="relative border-l-2 border-slate-100 ml-4 space-y-8 pb-4">
-                          <div className="relative pl-6">
-                            <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-zalo-primary ring-4 ring-white"></div>
-                            <h4 className="font-bold text-sm text-slate-900 mb-1">Bước 1</h4>
-                            <p className="text-sm text-slate-600">{detail.Step_1_Desc || 'Điền thông tin cá nhân cơ bản.'}</p>
-                          </div>
-
-                          <div className="relative pl-6">
-                            <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-zalo-primary ring-4 ring-white"></div>
-                            <h4 className="font-bold text-sm text-slate-900 mb-1">Bước 2</h4>
-                            <p className="text-sm text-slate-600">{detail.Step_2_Desc || 'Xác thực khuôn mặt và hoàn tất.'}</p>
-                          </div>
+                          {(detail.Guidances && detail.Guidances.length > 0 ? detail.Guidances : [{ content: 'Hướng dẫn đang được cập nhật...', image_url: '' }]).map((step, idx) => (
+                            <div key={idx} className="relative pl-6">
+                              <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-zalo-primary ring-4 ring-white"></div>
+                              <h4 className="font-bold text-sm text-slate-900 mb-1">Bước {idx + 1}</h4>
+                              <p className="text-sm text-slate-600">{step.content}</p>
+                              {step.image_url && (
+                                <div className="mt-3 rounded-lg overflow-hidden border border-slate-100 shadow-sm">
+                                  <img src={step.image_url} alt={`Hướng dẫn bước ${idx + 1}`} className="w-full object-cover" />
+                                </div>
+                              )}
+                            </div>
+                          ))}
                         </div>
                       </div>
 
-                      <div className="p-4 bg-slate-50 mt-auto">
-                        <button
-                          onClick={() => {
-                            alert(`Action: ${detail.CTA_Action_Type}\nTarget URL: ${detail.Final_Target_URL}`);
-                          }}
-                          className="w-full py-3.5 rounded-xl font-bold text-sm text-white bg-zalo-primary hover:bg-zalo-dark transition-colors flex items-center justify-center gap-2 shadow-md shadow-zalo-primary/20"
-                        >
-                          Tiếp tục sang đối tác
-                          <ExternalLink size={16} />
-                        </button>
-                        <p className="text-[10px] text-center text-slate-400 mt-3 px-4">
+                      <div className="p-4 bg-slate-50 mt-auto space-y-3">
+                        {detail.Main_CTAs && detail.Main_CTAs.length > 0 ? (
+                          detail.Main_CTAs.map(cta => (
+                            <button
+                              key={cta.id}
+                              onClick={() => {
+                                alert(`[CHUYỂN HƯỚNG ĐỐI TÁC]\n\nAction: ${cta.action_type}\nURL: ${cta.primary_url}\nCondition: ${cta.condition}`);
+                              }}
+                              className={`w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-md transition-opacity ${cta.action_type === 'DEEPLINK' || cta.condition === 'CONFIRM_CONDITION'
+                                  ? 'text-white'
+                                  : 'bg-white text-slate-700 border border-slate-200'
+                                }`}
+                              style={
+                                (cta.action_type === 'DEEPLINK' || cta.condition === 'CONFIRM_CONDITION')
+                                  ? { backgroundColor: card.Bg_Color || '#006AF5', color: card.Text_Color || 'white', backgroundImage: card.Background_Image_URL ? `url(${card.Background_Image_URL})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }
+                                  : {}
+                              }
+                            >
+                              {cta.name || 'Hành động'}
+                              {(cta.action_type === 'DEEPLINK' || cta.action_type === 'OPEN_KYC_FLOW') && <ExternalLink size={16} />}
+                            </button>
+                          ))
+                        ) : (
+                          <button
+                            onClick={() => {
+                              alert(`[CHUYỂN HƯỚNG ĐỐI TÁC]\n\nAction: ${detail.CTA_Action_Type}\nFallback URL: ${detail.Final_Target_URL}\nZPA Link: ${detail.ZPA_Link || '(Trống)'}\nZPI Link: ${detail.ZPI_Link || '(Trống)'}`);
+                            }}
+                            className="w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-md hover:opacity-90 transition-opacity"
+                            style={{ backgroundColor: card.Bg_Color || '#006AF5', color: card.Text_Color || 'white', backgroundImage: card.Background_Image_URL ? `url(${card.Background_Image_URL})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}
+                          >
+                            Tiếp tục sang đối tác
+                            <ExternalLink size={16} />
+                          </button>
+                        )}
+                        <p className="text-[10px] text-center text-slate-400 mt-2 px-4">
                           Bằng việc tiếp tục, bạn đồng ý chuyển sang trang web của đối tác để hoàn tất thủ tục.
                         </p>
                       </div>
@@ -832,23 +933,25 @@ export default function App() {
             <div className="w-1/3 h-1 bg-slate-900 rounded-full"></div>
           </div>
         </div>
-      </aside>
+      </aside >
 
       {/* --- Modals --- */}
-      {data && (
-        <CardConfigModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          configId={editingConfigId}
-          data={data}
-          onSave={handleSaveConfig}
-          onRedirectToPartners={() => {
-            setIsModalOpen(false);
-            setActiveView('partners');
-          }}
-        />
-      )}
-    </div>
+      {
+        data && (
+          <CardConfigModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            configId={editingConfigId}
+            data={data}
+            onSave={handleSaveConfig}
+            onRedirectToPartners={() => {
+              setIsModalOpen(false);
+              setActiveView('partners');
+            }}
+          />
+        )
+      }
+    </div >
   );
 }
 
