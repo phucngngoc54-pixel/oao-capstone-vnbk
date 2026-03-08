@@ -245,7 +245,22 @@ export default function App() {
 
     // 2.5 Filter by Category (Mobile Preview Tabs)
     if (mobileActiveCategory !== 'Tất cả') {
-      cards = cards.filter(c => c.Service_Group === mobileActiveCategory);
+      cards = cards.filter(c => {
+        const partner = data.partnerMaster.find(p => p.Partner_ID === c.Partner_ID);
+        const group = c.Service_Group || partner?.Category || '';
+
+        // Try exact match first
+        if (group === mobileActiveCategory) return true;
+
+        // Fallback mappings typical array
+        const lowerGroup = group.toLowerCase();
+        if (mobileActiveCategory === 'Tài khoản' && (lowerGroup.includes('tài khoản') || lowerGroup.includes('account') || lowerGroup.includes('bank'))) return true;
+        if (mobileActiveCategory === 'Thẻ tín dụng' && (lowerGroup.includes('thẻ') || lowerGroup.includes('credit'))) return true;
+        if (mobileActiveCategory === 'Vay tiêu dùng' && (lowerGroup.includes('vay') || lowerGroup.includes('loan') || lowerGroup.includes('finance'))) return true;
+        if (mobileActiveCategory === 'Bảo hiểm' && (lowerGroup.includes('bảo hiểm') || lowerGroup.includes('insurance'))) return true;
+
+        return false;
+      });
     }
 
     // 3. Sort by Priority (Low number = High priority, e.g., 1 is top)

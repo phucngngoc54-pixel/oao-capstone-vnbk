@@ -901,10 +901,9 @@ export default function CardConfigModal({ isOpen, onClose, configId, data, onSav
 
                                     <div className="flex justify-center mt-4">
                                         <button
-                                            onClick={() => alert("Chức năng 'Xem thêm' đang cập nhật")}
-                                            className="text-blue-600 text-xs font-medium flex items-center gap-1 hover:bg-blue-50 px-4 py-2 rounded-full transition-colors"
+                                            className="text-blue-600 text-xs font-medium flex items-center gap-1 bg-blue-50 px-4 py-2 rounded-full transition-colors opacity-70 pointer-events-none"
                                         >
-                                            Xem thêm
+                                            Xem thêm (Bản xem trước)
                                             <ChevronRight size={14} className="rotate-90" />
                                         </button>
                                     </div>
