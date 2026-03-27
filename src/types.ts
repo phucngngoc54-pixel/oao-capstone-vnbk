@@ -144,6 +144,7 @@ export type Variant = {
     name: string;
     weight: number;
     segment_bundle_snapshot: SegmentBundle;
+    overrides?: Partial<CardUIConfig>;
 };
 
 export type ExperimentStatus = 'Draft' | 'Running' | 'Paused' | 'Ended';
@@ -178,6 +179,8 @@ export type DisplayRules = {
     Start_Date?: string;
     End_Date?: string;
     Test_Group?: 'Control' | 'Variant A' | 'Variant B' | 'All';
+    experiment_id?: string;
+    target_bundle_id?: string;
 };
 
 export type UserPersona = {

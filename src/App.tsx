@@ -25,6 +25,10 @@ import {
   Battery
 } from 'lucide-react';
 
+import {
+  PartnerMaster,
+  CardUIConfig,
+  ProductDetailConfig,
   DisplayRules,
   ParsedData,
   Experiment,
@@ -348,7 +352,6 @@ export default function App() {
         const experiment = data.experiments.find(e => e.id === expRule.experiment_id);
         if (experiment && experiment.status === 'RUNNING') {
           const variant = assignVariant(userPersona.userId, experiment);
-          if (variant && variant.overrides) {
           if (variant && variant.overrides) {
             // Apply overrides to the card config for preview
             return {
