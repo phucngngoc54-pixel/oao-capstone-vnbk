@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend } from 'recharts';
-import { ParsedData } from '../types';
-import { TrendingUp, TrendingDown, Eye, MousePointerClick, Repeat2, Heart, Clock, Edit3, AlertTriangle, Zap, RefreshCw } from 'lucide-react';
+import { ParsedData, CardPerformance } from '../types';
+import { TrendingUp, TrendingDown, Eye, MousePointerClick, Repeat2, Heart, Clock, Edit3, AlertTriangle, Zap, RefreshCw, Share2, Timer, UserCheck, ShieldAlert } from 'lucide-react';
+
 
 interface AnalyticsDashboardProps {
     data: ParsedData;
@@ -9,7 +10,7 @@ interface AnalyticsDashboardProps {
 }
 
 // --- Mock Real-time Performance Generator ---
-function generateCardPerf(configId: string, seed: number) {
+function generateCardPerf(configId: string, seed: number): CardPerformance {
     const rand = (min: number, max: number, s: number) =>
         Math.floor(((Math.sin(s * 9301 + 49297) / 233280 + 1) / 2) * (max - min) + min);
 
@@ -18,33 +19,51 @@ function generateCardPerf(configId: string, seed: number) {
     const conversions = Math.floor(clicks * (rand(5, 35, seed + 2) / 100));
     const ctr = +((clicks / impressions) * 100).toFixed(2);
     const convRate = +((conversions / clicks) * 100).toFixed(2);
-    const avgTimeOnCard = rand(8, 45, seed + 3);
-    const saves = Math.floor(clicks * (rand(2, 15, seed + 4) / 100));
-    const shares = Math.floor(clicks * (rand(1, 8, seed + 5) / 100));
-    const engagementScore = +(ctr * 0.4 + convRate * 0.4 + (saves / clicks) * 10 * 0.2).toFixed(1);
+    
+    // New Metrics
+    const bounceRate = rand(15, 65, seed + 6);
+    const avgAttentionTime = rand(5, 45, seed + 7);
+    const shares = Math.floor(clicks * (rand(1, 12, seed + 8) / 100));
+    const returnRate = rand(2, 25, seed + 9);
+    
+    // Weighted Impact Score (0-100)
+    // CTR (20%), Conv (40%), Retention (20%), Attention (10%), Viral (10%)
+    const impactScore = +(
+        (ctr / 18) * 20 + 
+        (convRate / 35) * 40 + 
+        ((100 - bounceRate) / 85) * 20 + 
+        (avgAttentionTime / 45) * 10 + 
+        (shares / (clicks * 0.12)) * 10
+    ).toFixed(1);
 
-    return { configId, impressions, clicks, conversions, ctr, convRate, avgTimeOnCard, saves, shares, engagementScore };
+    const statusObj = getPerfStatus(ctr, convRate, impactScore);
+
+    return { 
+        configId, impressions, clicks, conversions, ctr, convRate, 
+        bounceRate, avgAttentionTime, shares, returnRate, 
+        impactScore: Math.min(100, Math.max(0, impactScore)),
+        status: statusObj.status as 'good' | 'warn' | 'critical'
+    };
 }
 
-function generateTrendData(seed: number) {
-    return Array.from({ length: 7 }, (_, i) => {
-        const day = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i];
-        const base = Math.floor(((Math.sin((seed + i) * 9301 + 49297) / 233280 + 1) / 2) * 5000 + 1000);
-        return { day, impressions: base, clicks: Math.floor(base * 0.12), conversions: Math.floor(base * 0.03) };
-    });
-}
+const PERF_THRESHOLDS = { 
+    ctr: { good: 10, warn: 5 }, 
+    convRate: { good: 20, warn: 10 }, 
+    impact: { good: 70, warn: 40 },
+    bounce: { good: 30, warn: 50 } 
+};
 
-const PERF_THRESHOLDS = { ctr: { good: 8, warn: 4 }, convRate: { good: 15, warn: 8 }, engagement: { good: 7, warn: 4 } };
-
-function getPerfStatus(ctr: number, convRate: number, engagement: number) {
+function getPerfStatus(ctr: number, convRate: number, impact: number) {
     const issues = [];
     if (ctr < PERF_THRESHOLDS.ctr.warn) issues.push('Low CTR');
     if (convRate < PERF_THRESHOLDS.convRate.warn) issues.push('Low Conversion');
-    if (engagement < PERF_THRESHOLDS.engagement.warn) issues.push('Low Engagement');
-    if (issues.length >= 2) return { status: 'critical', label: 'Needs Fix', color: 'text-red-600 bg-red-50 border-red-200' };
-    if (issues.length === 1) return { status: 'warn', label: 'Monitor', color: 'text-amber-600 bg-amber-50 border-amber-200' };
+    if (impact < PERF_THRESHOLDS.impact.warn) issues.push('Low Impact');
+    
+    if (impact < 30 || issues.length >= 2) return { status: 'critical', label: 'Needs Fix', color: 'text-red-600 bg-red-50 border-red-200' };
+    if (impact < 60 || issues.length === 1) return { status: 'warn', label: 'Monitor', color: 'text-amber-600 bg-amber-50 border-amber-200' };
     return { status: 'good', label: 'Healthy', color: 'text-emerald-600 bg-emerald-50 border-emerald-200' };
 }
+
 
 function MetricBadge({ label, value, suffix = '', good, warn, reverse = false }: { label: string; value: number; suffix?: string; good: number; warn: number; reverse?: boolean }) {
     const isGood = reverse ? value <= warn : value >= good;
@@ -107,11 +126,21 @@ export default function AnalyticsDashboard({ data, onEditCard }: AnalyticsDashbo
         const rule = data.displayRules.find(r => r.Config_ID === card.Config_ID);
         const perf = generateCardPerf(card.Config_ID, i + refreshKey * 1000);
         const partner = data.partnerMaster.find(p => p.Partner_ID === card.Partner_ID);
-        const perfStatus = getPerfStatus(perf.ctr, perf.convRate, perf.engagementScore);
+        const perfStatus = getPerfStatus(perf.ctr, perf.convRate, perf.impactScore);
         return { ...perf, card, rule, partner, perfStatus };
     });
 
-    const trendData = generateTrendData(refreshKey);
+    const trendData = Array.from({ length: 7 }, (_, i) => {
+        const day = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i];
+        const base = Math.floor(((Math.sin((refreshKey + i) * 9301 + 49297) / 233280 + 1) / 2) * 5000 + 1000);
+        return { 
+            name: day, 
+            impressions: base, 
+            clicks: Math.floor(base * 0.12), 
+            conversions: Math.floor(base * 0.03) 
+        };
+    });
+
 
     // Mock Audit Logs
     const auditLogs = [
@@ -234,7 +263,12 @@ export default function AnalyticsDashboard({ data, onEditCard }: AnalyticsDashbo
                         )}
                         {cardPerformances.map((cp) => {
                             const isExpanded = expandedCard === cp.configId;
-                            const trend7d = generateTrendData(cp.card.Config_ID.charCodeAt(0) + refreshKey);
+                            // Mock 7-day trend for this specific card
+                            const trend7d = Array.from({ length: 7 }, (_, i) => {
+                                const day = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i];
+                                const base = Math.floor(cp.impressions / 7 * (0.8 + Math.random() * 0.4));
+                                return { day, impressions: base, clicks: Math.floor(base * (cp.ctr/100)), conversions: Math.floor(base * (cp.ctr/100) * (cp.convRate/100)) };
+                            });
 
                             return (
                                 <div key={cp.configId} className="hover:bg-slate-50/50 transition-colors">
@@ -285,18 +319,18 @@ export default function AnalyticsDashboard({ data, onEditCard }: AnalyticsDashbo
                                                 </div>
                                                 <div className="w-px h-8 bg-slate-100"></div>
                                                 <div className="flex items-center gap-1.5">
-                                                    <Heart size={13} className="text-pink-400" />
+                                                    <ShieldAlert size={13} className={cp.bounceRate <= PERF_THRESHOLDS.bounce.good ? 'text-emerald-500' : cp.bounceRate <= PERF_THRESHOLDS.bounce.warn ? 'text-amber-500' : 'text-red-500'} />
                                                     <div>
-                                                        <p className="text-sm font-bold text-slate-700">{cp.saves.toLocaleString()}</p>
-                                                        <p className="text-[10px] text-slate-400">Saves</p>
+                                                        <p className={`text-sm font-bold ${cp.bounceRate <= PERF_THRESHOLDS.bounce.good ? 'text-emerald-600' : cp.bounceRate <= PERF_THRESHOLDS.bounce.warn ? 'text-amber-600' : 'text-red-600'}`}>{cp.bounceRate}%</p>
+                                                        <p className="text-[10px] text-slate-400">Bounce Rate</p>
                                                     </div>
                                                 </div>
                                                 <div className="w-px h-8 bg-slate-100"></div>
                                                 <div className="flex items-center gap-1.5">
-                                                    <Zap size={13} className={cp.engagementScore >= PERF_THRESHOLDS.engagement.good ? 'text-emerald-500' : cp.engagementScore >= PERF_THRESHOLDS.engagement.warn ? 'text-amber-500' : 'text-red-500'} />
+                                                    <Zap size={13} className={cp.impactScore >= PERF_THRESHOLDS.impact.good ? 'text-emerald-500' : cp.impactScore >= PERF_THRESHOLDS.impact.warn ? 'text-amber-500' : 'text-red-500'} />
                                                     <div>
-                                                        <p className={`text-sm font-bold ${cp.engagementScore >= PERF_THRESHOLDS.engagement.good ? 'text-emerald-600' : cp.engagementScore >= PERF_THRESHOLDS.engagement.warn ? 'text-amber-600' : 'text-red-600'}`}>{cp.engagementScore}</p>
-                                                        <p className="text-[10px] text-slate-400">Engagement</p>
+                                                        <p className={`text-sm font-bold ${cp.impactScore >= PERF_THRESHOLDS.impact.good ? 'text-emerald-600' : cp.impactScore >= PERF_THRESHOLDS.impact.warn ? 'text-amber-600' : 'text-red-600'}`}>{cp.impactScore}</p>
+                                                        <p className="text-[10px] text-slate-400">Impact Score</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -337,54 +371,73 @@ export default function AnalyticsDashboard({ data, onEditCard }: AnalyticsDashbo
                                                     <div className="grid grid-cols-2 gap-2">
                                                         <MetricBadge label="CTR" value={cp.ctr} suffix="%" good={PERF_THRESHOLDS.ctr.good} warn={PERF_THRESHOLDS.ctr.warn} />
                                                         <MetricBadge label="Conv. Rate" value={cp.convRate} suffix="%" good={PERF_THRESHOLDS.convRate.good} warn={PERF_THRESHOLDS.convRate.warn} />
-                                                        <MetricBadge label="Avg. Time (s)" value={cp.avgTimeOnCard} suffix="s" good={20} warn={10} />
-                                                        <MetricBadge label="Shares" value={cp.shares} suffix="" good={50} warn={20} />
-                                                        <MetricBadge label="Conversions" value={cp.conversions} suffix="" good={100} warn={30} />
-                                                        <MetricBadge label="Eng. Score" value={cp.engagementScore} suffix="" good={PERF_THRESHOLDS.engagement.good} warn={PERF_THRESHOLDS.engagement.warn} />
+                                                        <MetricBadge label="Bounce Rate" value={cp.bounceRate} suffix="%" good={PERF_THRESHOLDS.bounce.good} warn={PERF_THRESHOLDS.bounce.warn} reverse={true} />
+                                                        <MetricBadge label="Avg. Attention" value={cp.avgAttentionTime} suffix="s" good={20} warn={10} />
+                                                        <MetricBadge label="Social Shares" value={cp.shares} suffix="" good={50} warn={20} />
+                                                        <MetricBadge label="Return Rate" value={cp.returnRate} suffix="%" good={15} warn={7} />
                                                     </div>
+                                                    
+                                                    {/* Impact Score Indicator */}
+                                                    <div className="mt-4 p-3 bg-white rounded-lg border border-slate-200 shadow-inner">
+                                                        <div className="flex justify-between items-center mb-1">
+                                                            <span className="text-[10px] font-bold text-slate-500 uppercase">Impact Score</span>
+                                                            <span className={`text-xs font-bold ${cp.impactScore >= 70 ? 'text-emerald-600' : cp.impactScore >= 40 ? 'text-amber-600' : 'text-red-600'}`}>{cp.impactScore}/100</span>
+                                                        </div>
+                                                        <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                            <div 
+                                                                className={`h-full transition-all duration-1000 ${cp.impactScore >= 70 ? 'bg-emerald-500' : cp.impactScore >= 40 ? 'bg-amber-500' : 'bg-red-500'}`}
+                                                                style={{ width: `${cp.impactScore}%` }}
+                                                            ></div>
+                                                        </div>
+                                                    </div>
+
                                                     {cp.perfStatus.status !== 'good' && onEditCard && (
                                                         <div className={`p-3 rounded-lg border ${cp.perfStatus.status === 'critical' ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'}`}>
-                                                            <p className={`text-xs font-bold mb-1 ${cp.perfStatus.status === 'critical' ? 'text-red-700' : 'text-amber-700'}`}>
-                                                                {cp.perfStatus.status === 'critical' ? '⚠️ Action Required' : '👀 Suggested Action'}
+                                                            <p className={`text-xs font-bold mb-1 flex items-center gap-1 ${cp.perfStatus.status === 'critical' ? 'text-red-700' : 'text-amber-700'}`}>
+                                                                {cp.perfStatus.status === 'critical' ? <><ShieldAlert size={12}/> Critical Issue</> : <><AlertTriangle size={12}/> Analysis Insight</>}
                                                             </p>
-                                                            <p className="text-[11px] text-slate-600 mb-2">
-                                                                {cp.ctr < PERF_THRESHOLDS.ctr.warn ? 'CTR is critically low. Try updating the card title, subtitle, or badge text to be more compelling.' : ''}
-                                                                {cp.convRate < PERF_THRESHOLDS.convRate.warn ? ' Conversion rate needs improvement. Consider adjusting CTA text, priority, or target segment.' : ''}
+                                                            <p className="text-[11px] text-slate-600 mb-2 italic">
+                                                                {cp.ctr < PERF_THRESHOLDS.ctr.warn ? 'CTR is critically low. The card title or visual style may not be appealing to the target audience. Recommend A/B Testing a new image.' : ''}
+                                                                {cp.convRate < PERF_THRESHOLDS.convRate.warn ? ' Conversion rate is low despite clicks. The destination content might not match the card\'s promise.' : ''}
+                                                                {cp.bounceRate > PERF_THRESHOLDS.bounce.warn ? ' High bounce rate detected. Check if the link is broken or the landing page is slow.' : ''}
+                                                                {cp.impactScore < 40 ? ' Overall impact is suboptimal. Consider adjusting the display priority or targeting rules.' : ''}
                                                             </p>
                                                             <button
                                                                 onClick={() => onEditCard(cp.configId)}
-                                                                className={`w-full py-1.5 rounded-md text-xs font-bold flex items-center justify-center gap-1.5 ${cp.perfStatus.status === 'critical' ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-amber-500 text-white hover:bg-amber-600'}`}
+                                                                className={`w-full py-1.5 rounded-md text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-transform active:scale-95 ${cp.perfStatus.status === 'critical' ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-amber-500 text-white hover:bg-amber-600'}`}
                                                             >
                                                                 <Edit3 size={12} />
-                                                                Open Card Editor
+                                                                Fix Card Config
                                                             </button>
                                                         </div>
                                                     )}
                                                 </div>
 
                                                 {/* 7-day Sparkline */}
-                                                <div className="col-span-2">
-                                                    <h5 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">7-Day Trend (This Card)</h5>
-                                                    <div className="h-40">
+                                                <div className="col-span-2 flex flex-col">
+                                                    <div className="flex justify-between items-center mb-3">
+                                                        <h5 className="text-xs font-bold text-slate-500 uppercase tracking-wider">7-Day Live Trend</h5>
+                                                        <div className="flex gap-4">
+                                                            {[{ c: '#3b82f6', l: 'Imp' }, { c: '#10b981', l: 'Clicks' }, { c: '#f59e0b', l: 'Conv' }].map(item => (
+                                                                <div key={item.l} className="flex items-center gap-1.5">
+                                                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.c }}></div>
+                                                                    <span className="text-[10px] text-slate-500">{item.l}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex-1 bg-white rounded-xl border border-slate-200 p-4 min-h-[160px]">
                                                         <ResponsiveContainer width="100%" height="100%">
                                                             <LineChart data={trend7d} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
-                                                                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                                                                <XAxis dataKey="day" tick={{ fontSize: 10 }} />
-                                                                <YAxis tick={{ fontSize: 10 }} />
-                                                                <Tooltip contentStyle={{ fontSize: 11 }} />
-                                                                <Line type="monotone" dataKey="impressions" stroke="#3b82f6" strokeWidth={1.5} dot={false} name="Impressions" />
-                                                                <Line type="monotone" dataKey="clicks" stroke="#10b981" strokeWidth={1.5} dot={false} name="Clicks" />
-                                                                <Line type="monotone" dataKey="conversions" stroke="#f59e0b" strokeWidth={1.5} dot={false} name="Conversions" />
+                                                                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                                                                <XAxis dataKey="day" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                                                                <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                                                                <Tooltip contentStyle={{ fontSize: 11, borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                                                                <Line type="monotone" dataKey="impressions" stroke="#3b82f6" strokeWidth={2.5} dot={{ r: 3, fill: '#3b82f6', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 5 }} name="Impressions" />
+                                                                <Line type="monotone" dataKey="clicks" stroke="#10b981" strokeWidth={2} dot={false} name="Clicks" />
+                                                                <Line type="monotone" dataKey="conversions" stroke="#f59e0b" strokeWidth={2} dot={false} name="Conversions" />
                                                             </LineChart>
                                                         </ResponsiveContainer>
-                                                    </div>
-                                                    <div className="flex gap-4 mt-2 justify-end">
-                                                        {[{ c: '#3b82f6', l: 'Impressions' }, { c: '#10b981', l: 'Clicks' }, { c: '#f59e0b', l: 'Conversions' }].map(item => (
-                                                            <div key={item.l} className="flex items-center gap-1.5">
-                                                                <div className="w-3 h-0.5 rounded" style={{ backgroundColor: item.c }}></div>
-                                                                <span className="text-[10px] text-slate-500">{item.l}</span>
-                                                            </div>
-                                                        ))}
                                                     </div>
                                                 </div>
                                             </div>
@@ -436,4 +489,3 @@ export default function AnalyticsDashboard({ data, onEditCard }: AnalyticsDashbo
         </div>
     );
 }
-

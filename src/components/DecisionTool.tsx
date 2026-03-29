@@ -407,5 +407,3 @@ export default function DecisionTool({ data, onUpdateData }: DecisionToolProps) 
         </div>
     );
 }
-    );
-}

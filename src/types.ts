@@ -192,6 +192,21 @@ export type UserPersona = {
     segment: string;
 };
 
+export type CardPerformance = {
+    configId: string;
+    impressions: number;
+    clicks: number;
+    conversions: number;
+    ctr: number;
+    convRate: number;
+    bounceRate: number;
+    avgAttentionTime: number;
+    shares: number;
+    returnRate: number;
+    impactScore: number;
+    status: 'good' | 'warn' | 'critical';
+};
+
 export type ParsedData = {
     partnerMaster: PartnerMaster[];
     cardUIConfig: CardUIConfig[];
@@ -200,3 +215,4 @@ export type ParsedData = {
     segmentBundles: SegmentBundle[];
     experiments: Experiment[];
 };
+
